@@ -45,19 +45,14 @@ let
         else ruleAttrs;
     in { name = ruleName; value = withOrdering; };
 
-  # Build NAT rule resources with place_before chaining
-  natRuleCount = builtins.length allNatRules;
+  # Build NAT rule resources (no place_before — NAT ordering is less critical
+  # and place_before forces destructive replacement on existing routers)
   mkNatRule = idx:
     let
       rule = builtins.elemAt allNatRules idx;
       ruleName = rule.name;
       ruleAttrs = builtins.removeAttrs rule [ "name" ];
-      withOrdering =
-        if idx < natRuleCount - 1 then
-          let nextRule = builtins.elemAt allNatRules (idx + 1);
-          in ruleAttrs // { place_before = "\${routeros_ip_firewall_nat.${nextRule.name}.id}"; }
-        else ruleAttrs;
-    in { name = ruleName; value = withOrdering; };
+    in { name = ruleName; value = ruleAttrs; };
 in
 {
   options.routeros.firewall = {
@@ -111,7 +106,7 @@ in
 
       routeros_ip_firewall_filter = builtins.listToAttrs (builtins.genList mkFilterRule filterRuleCount);
 
-      routeros_ip_firewall_nat = builtins.listToAttrs (builtins.genList mkNatRule natRuleCount);
+      routeros_ip_firewall_nat = builtins.listToAttrs (builtins.genList mkNatRule (builtins.length allNatRules));
     };
   };
 }
