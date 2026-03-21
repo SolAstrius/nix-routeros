@@ -61,7 +61,10 @@ in
     security = {
       authenticationTypes = lib.mkOption {
         type = lib.types.listOf lib.types.str;
-        default = [ "wpa-psk" "wpa2-psk" ];
+        default = [
+          "wpa-psk"
+          "wpa2-psk"
+        ];
         description = "Authentication types.";
       };
       encryption = lib.mkOption {
@@ -74,8 +77,18 @@ in
     provisioning = lib.mkOption {
       type = lib.types.listOf (lib.types.attrsOf lib.types.anything);
       default = [
-        { name = "prov_5G"; hw_supported_modes = [ "ac" ]; master_configuration = "5G"; name_prefix = "5G"; }
-        { name = "prov_2G"; hw_supported_modes = [ "gn" ]; master_configuration = "2G"; name_prefix = "2G"; }
+        {
+          name = "prov_5G";
+          hw_supported_modes = [ "ac" ];
+          master_configuration = "5G";
+          name_prefix = "5G";
+        }
+        {
+          name = "prov_2G";
+          hw_supported_modes = [ "gn" ];
+          master_configuration = "2G";
+          name_prefix = "2G";
+        }
       ];
       description = "CAPsMAN provisioning rules.";
     };
@@ -110,24 +123,31 @@ in
         passphrase = "\${var.wifi_password}";
       };
 
-      routeros_capsman_configuration = let
-        chains = [ 0 1 2 3 ];
-        mkConfig = name: channelName: {
-          inherit name;
-          channel.config = channelName;
-          country = cfg.country;
-          datapath.config = "datapath";
-          installation = "any";
-          mode = "ap";
-          rx_chains = chains;
-          security.config = "security";
-          ssid = cfg.ssid;
-          tx_chains = chains;
+      routeros_capsman_configuration =
+        let
+          chains = [
+            0
+            1
+            2
+            3
+          ];
+          mkConfig = name: channelName: {
+            inherit name;
+            channel.config = channelName;
+            country = cfg.country;
+            datapath.config = "datapath";
+            installation = "any";
+            mode = "ap";
+            rx_chains = chains;
+            security.config = "security";
+            ssid = cfg.ssid;
+            tx_chains = chains;
+          };
+        in
+        {
+          config_2G = mkConfig "2G" "2G";
+          config_5G = mkConfig "5G" "5G";
         };
-      in {
-        config_2G = mkConfig "2G" "2G";
-        config_5G = mkConfig "5G" "5G";
-      };
 
       routeros_capsman_manager.manager = {
         enabled = true;

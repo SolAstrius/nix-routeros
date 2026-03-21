@@ -23,7 +23,10 @@ in
     };
 
     scheme = lib.mkOption {
-      type = lib.types.enum [ "api" "apis" ];
+      type = lib.types.enum [
+        "api"
+        "apis"
+      ];
       default = "api";
       description = "API connection scheme (api for plaintext, apis for TLS).";
     };

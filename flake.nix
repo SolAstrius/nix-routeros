@@ -10,7 +10,12 @@
   };
 
   outputs =
-    { self, nixpkgs, terranix, ... }:
+    {
+      self,
+      nixpkgs,
+      terranix,
+      ...
+    }:
     let
       inherit (nixpkgs) lib;
       helpers = import ./lib/helpers.nix { inherit lib; };
@@ -34,7 +39,16 @@
 
       # Lib helpers
       lib = helpers // {
-        mkRouterDerivation = { pkgs, system, name ? "router", modules ? [], stateDir ? ".", secretsFile ? null, secrets ? {} }:
+        mkRouterDerivation =
+          {
+            pkgs,
+            system,
+            name ? "router",
+            modules ? [ ],
+            stateDir ? ".",
+            secretsFile ? null,
+            secrets ? { },
+          }:
           let
             terraformConfiguration = terranix.lib.terranixConfiguration {
               inherit system;
@@ -54,7 +68,7 @@
             '';
 
             loadSecrets =
-              if secretsFile != null && secrets != {} then
+              if secretsFile != null && secrets != { } then
                 lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (
                     envVar: sopsKey:
@@ -109,5 +123,20 @@
         path = ./templates/default;
         description = "Basic nix-routeros configuration";
       };
+
+      # Formatter — per-system output
+      formatter = builtins.listToAttrs (
+        builtins.map
+          (system: {
+            name = system;
+            value = nixpkgs.legacyPackages.${system}.nixfmt-tree;
+          })
+          [
+            "x86_64-linux"
+            "aarch64-linux"
+            "x86_64-darwin"
+            "aarch64-darwin"
+          ]
+      );
     };
 }

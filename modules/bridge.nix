@@ -10,7 +10,12 @@ in
       type = lib.types.listOf lib.types.str;
       default = [ ];
       description = "Interfaces to add as bridge ports.";
-      example = [ "ether2" "ether3" "ether4" "sfp1" ];
+      example = [
+        "ether2"
+        "ether3"
+        "ether4"
+        "sfp1"
+      ];
     };
 
     adminMac = lib.mkOption {
@@ -27,7 +32,8 @@ in
         auto_mac = cfg.adminMac == null;
         comment = "defconf";
         port_cost_mode = "short";
-      } // lib.optionalAttrs (cfg.adminMac != null) {
+      }
+      // lib.optionalAttrs (cfg.adminMac != null) {
         admin_mac = cfg.adminMac;
       };
 

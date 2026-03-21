@@ -50,22 +50,40 @@ in
 
       # Interface lists
       routeros_interface_list = {
-        WAN = { name = "WAN"; comment = "defconf"; };
-        LAN = { name = "LAN"; comment = "defconf"; };
+        WAN = {
+          name = "WAN";
+          comment = "defconf";
+        };
+        LAN = {
+          name = "LAN";
+          comment = "defconf";
+        };
       };
 
       # List members: bridge->LAN, WAN interfaces->WAN, LTE->WAN (if enabled)
-      routeros_interface_list_member =
-        { bridge_LAN = { interface = "bridge"; list = "LAN"; comment = "defconf"; }; }
-        // builtins.listToAttrs (
-          builtins.map (iface: {
-            name = "${iface}_WAN";
-            value = { interface = iface; list = "WAN"; comment = "defconf"; };
-          }) cfg.wan
-        )
-        // lib.optionalAttrs lteCfg.enable {
-          lte1_WAN = { interface = "lte1"; list = "WAN"; };
+      routeros_interface_list_member = {
+        bridge_LAN = {
+          interface = "bridge";
+          list = "LAN";
+          comment = "defconf";
         };
+      }
+      // builtins.listToAttrs (
+        builtins.map (iface: {
+          name = "${iface}_WAN";
+          value = {
+            interface = iface;
+            list = "WAN";
+            comment = "defconf";
+          };
+        }) cfg.wan
+      )
+      // lib.optionalAttrs lteCfg.enable {
+        lte1_WAN = {
+          interface = "lte1";
+          list = "WAN";
+        };
+      };
 
       # LTE APN
       routeros_interface_lte_apn = lib.mkIf lteCfg.enable {

@@ -6,25 +6,122 @@ let
   # Preset default filter rules (generic home router rules only).
   # Device-specific rules like TV traffic blocking go in consumer's filterRules.
   presetFilterRules = [
-    { name = "input_accept_established"; action = "accept"; chain = "input"; comment = "defconf: accept established,related,untracked"; connection_state = "established,related,untracked"; }
-    { name = "input_drop_invalid"; action = "drop"; chain = "input"; comment = "defconf: drop invalid"; connection_state = "invalid"; }
-    { name = "input_accept_icmp"; action = "accept"; chain = "input"; comment = "defconf: accept ICMP"; protocol = "icmp"; }
-    { name = "input_accept_loopback"; action = "accept"; chain = "input"; comment = "defconf: accept to local loopback (for CAPsMAN)"; dst_address = "127.0.0.1"; }
-    { name = "input_drop_non_lan"; action = "drop"; chain = "input"; comment = "defconf: drop all not coming from LAN"; in_interface_list = "!LAN"; }
-    { name = "forward_accept_ipsec_in"; action = "accept"; chain = "forward"; comment = "defconf: accept in ipsec policy"; ipsec_policy = "in,ipsec"; }
-    { name = "forward_accept_ipsec_out"; action = "accept"; chain = "forward"; comment = "defconf: accept out ipsec policy"; ipsec_policy = "out,ipsec"; }
-    { name = "forward_fasttrack"; action = "fasttrack-connection"; chain = "forward"; comment = "defconf: fasttrack"; connection_state = "established,related"; }
-    { name = "forward_accept_established"; action = "accept"; chain = "forward"; comment = "defconf: accept established,related, untracked"; connection_state = "established,related,untracked"; }
-    { name = "forward_drop_invalid"; action = "drop"; chain = "forward"; comment = "defconf: drop invalid"; connection_state = "invalid"; }
-    { name = "forward_drop_wan_not_dstnat"; action = "drop"; chain = "forward"; comment = "defconf: drop all from WAN not DSTNATed"; connection_nat_state = "!dstnat"; connection_state = "new"; in_interface_list = "WAN"; }
-    { name = "input_drop_dns_tcp"; action = "drop"; chain = "input"; dst_port = 53; in_interface_list = "WAN"; protocol = "tcp"; }
-    { name = "input_drop_dns_udp"; action = "drop"; chain = "input"; dst_port = 53; in_interface_list = "WAN"; protocol = "udp"; }
+    {
+      name = "input_accept_established";
+      action = "accept";
+      chain = "input";
+      comment = "defconf: accept established,related,untracked";
+      connection_state = "established,related,untracked";
+    }
+    {
+      name = "input_drop_invalid";
+      action = "drop";
+      chain = "input";
+      comment = "defconf: drop invalid";
+      connection_state = "invalid";
+    }
+    {
+      name = "input_accept_icmp";
+      action = "accept";
+      chain = "input";
+      comment = "defconf: accept ICMP";
+      protocol = "icmp";
+    }
+    {
+      name = "input_accept_loopback";
+      action = "accept";
+      chain = "input";
+      comment = "defconf: accept to local loopback (for CAPsMAN)";
+      dst_address = "127.0.0.1";
+    }
+    {
+      name = "input_drop_non_lan";
+      action = "drop";
+      chain = "input";
+      comment = "defconf: drop all not coming from LAN";
+      in_interface_list = "!LAN";
+    }
+    {
+      name = "forward_accept_ipsec_in";
+      action = "accept";
+      chain = "forward";
+      comment = "defconf: accept in ipsec policy";
+      ipsec_policy = "in,ipsec";
+    }
+    {
+      name = "forward_accept_ipsec_out";
+      action = "accept";
+      chain = "forward";
+      comment = "defconf: accept out ipsec policy";
+      ipsec_policy = "out,ipsec";
+    }
+    {
+      name = "forward_fasttrack";
+      action = "fasttrack-connection";
+      chain = "forward";
+      comment = "defconf: fasttrack";
+      connection_state = "established,related";
+    }
+    {
+      name = "forward_accept_established";
+      action = "accept";
+      chain = "forward";
+      comment = "defconf: accept established,related, untracked";
+      connection_state = "established,related,untracked";
+    }
+    {
+      name = "forward_drop_invalid";
+      action = "drop";
+      chain = "forward";
+      comment = "defconf: drop invalid";
+      connection_state = "invalid";
+    }
+    {
+      name = "forward_drop_wan_not_dstnat";
+      action = "drop";
+      chain = "forward";
+      comment = "defconf: drop all from WAN not DSTNATed";
+      connection_nat_state = "!dstnat";
+      connection_state = "new";
+      in_interface_list = "WAN";
+    }
+    {
+      name = "input_drop_dns_tcp";
+      action = "drop";
+      chain = "input";
+      dst_port = 53;
+      in_interface_list = "WAN";
+      protocol = "tcp";
+    }
+    {
+      name = "input_drop_dns_udp";
+      action = "drop";
+      chain = "input";
+      dst_port = 53;
+      in_interface_list = "WAN";
+      protocol = "udp";
+    }
   ];
 
   # Preset default NAT rules
   presetNatRules = [
-    { name = "masquerade"; action = "masquerade"; chain = "srcnat"; comment = "defconf: masquerade"; ipsec_policy = "out,none"; out_interface_list = "WAN"; }
-    { name = "dns_redirect"; action = "redirect"; chain = "dstnat"; dst_port = 53; protocol = "udp"; to_addresses = config.routeros.connection.gateway; to_ports = 53; }
+    {
+      name = "masquerade";
+      action = "masquerade";
+      chain = "srcnat";
+      comment = "defconf: masquerade";
+      ipsec_policy = "out,none";
+      out_interface_list = "WAN";
+    }
+    {
+      name = "dns_redirect";
+      action = "redirect";
+      chain = "dstnat";
+      dst_port = 53;
+      protocol = "udp";
+      to_addresses = config.routeros.connection.gateway;
+      to_ports = 53;
+    }
   ];
 
   # Combined rules: preset + user
@@ -33,26 +130,39 @@ let
 
   # Build filter rule resources with place_before chaining
   filterRuleCount = builtins.length allFilterRules;
-  mkFilterRule = idx:
+  mkFilterRule =
+    idx:
     let
       rule = builtins.elemAt allFilterRules idx;
       ruleName = rule.name;
       ruleAttrs = builtins.removeAttrs rule [ "name" ];
       withOrdering =
         if idx < filterRuleCount - 1 then
-          let nextRule = builtins.elemAt allFilterRules (idx + 1);
-          in ruleAttrs // { place_before = "\${routeros_ip_firewall_filter.${nextRule.name}.id}"; }
-        else ruleAttrs;
-    in { name = ruleName; value = withOrdering; };
+          let
+            nextRule = builtins.elemAt allFilterRules (idx + 1);
+          in
+          ruleAttrs // { place_before = "\${routeros_ip_firewall_filter.${nextRule.name}.id}"; }
+        else
+          ruleAttrs;
+    in
+    {
+      name = ruleName;
+      value = withOrdering;
+    };
 
   # Build NAT rule resources (no place_before — NAT ordering is less critical
   # and place_before forces destructive replacement on existing routers)
-  mkNatRule = idx:
+  mkNatRule =
+    idx:
     let
       rule = builtins.elemAt allNatRules idx;
       ruleName = rule.name;
       ruleAttrs = builtins.removeAttrs rule [ "name" ];
-    in { name = ruleName; value = ruleAttrs; };
+    in
+    {
+      name = ruleName;
+      value = ruleAttrs;
+    };
 in
 {
   options.routeros.firewall = {
@@ -70,7 +180,12 @@ in
       type = lib.types.attrsOf (lib.types.listOf lib.types.str);
       default = { };
       description = "Firewall address lists. Keys are list names, values are lists of addresses.";
-      example = { tv = [ "10.0.0.50" "10.0.0.51" ]; };
+      example = {
+        tv = [
+          "10.0.0.50"
+          "10.0.0.51"
+        ];
+      };
     };
 
     filterRules = lib.mkOption {
@@ -98,7 +213,10 @@ in
             listName: addresses:
             lib.imap0 (idx: addr: {
               name = "${helpers.sanitizeName listName}_${toString idx}";
-              value = { address = addr; list = listName; };
+              value = {
+                address = addr;
+                list = listName;
+              };
             }) addresses
           ) cfg.addressLists
         )
@@ -106,7 +224,9 @@ in
 
       routeros_ip_firewall_filter = builtins.listToAttrs (builtins.genList mkFilterRule filterRuleCount);
 
-      routeros_ip_firewall_nat = builtins.listToAttrs (builtins.genList mkNatRule (builtins.length allNatRules));
+      routeros_ip_firewall_nat = builtins.listToAttrs (
+        builtins.genList mkNatRule (builtins.length allNatRules)
+      );
     };
   };
 }

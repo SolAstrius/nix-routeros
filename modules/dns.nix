@@ -23,7 +23,10 @@ in
 
     upstream = lib.mkOption {
       type = lib.types.listOf lib.types.str;
-      default = [ "8.8.8.8" "4.4.4.4" ];
+      default = [
+        "8.8.8.8"
+        "4.4.4.4"
+      ];
       description = "Upstream DNS servers.";
     };
 

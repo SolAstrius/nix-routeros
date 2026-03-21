@@ -14,11 +14,18 @@
     };
   };
 
-  outputs = { nixpkgs, terranix, nix-routeros, ... }:
+  outputs =
+    {
+      nixpkgs,
+      terranix,
+      nix-routeros,
+      ...
+    }:
     let
       system = "x86_64-linux";
       pkgs = nixpkgs.legacyPackages.${system};
-    in {
+    in
+    {
       packages.${system}.default = nix-routeros.lib.mkRouterDerivation {
         inherit pkgs system;
         name = "router";

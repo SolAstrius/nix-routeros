@@ -12,7 +12,10 @@
     };
 
     bridge.ports = [
-      "ether2" "ether3" "ether4" "ether5"
+      "ether2"
+      "ether3"
+      "ether4"
+      "ether5"
     ];
 
     # Your devices
@@ -21,7 +24,10 @@
         ip = "10.0.0.10";
         mac = "AA:BB:CC:DD:EE:FF";
         comment = "Home server";
-        aliases = [ "jellyfin" "home-assistant" ];
+        aliases = [
+          "jellyfin"
+          "home-assistant"
+        ];
       };
     };
 

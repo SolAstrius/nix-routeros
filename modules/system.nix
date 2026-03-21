@@ -42,10 +42,22 @@ in
       ssh = mkServiceOpt "SSH" { port = 22; };
       winbox = mkServiceOpt "Winbox" { port = 8291; };
       api = mkServiceOpt "API" { port = 8728; };
-      ftp = mkServiceOpt "FTP" { enable = false; port = 21; };
-      telnet = mkServiceOpt "Telnet" { enable = false; port = 23; };
-      www = mkServiceOpt "WWW" { enable = false; port = 80; };
-      api-ssl = mkServiceOpt "API-SSL" { enable = false; port = 8729; };
+      ftp = mkServiceOpt "FTP" {
+        enable = false;
+        port = 21;
+      };
+      telnet = mkServiceOpt "Telnet" {
+        enable = false;
+        port = 23;
+      };
+      www = mkServiceOpt "WWW" {
+        enable = false;
+        port = 80;
+      };
+      api-ssl = mkServiceOpt "API-SSL" {
+        enable = false;
+        port = 8729;
+      };
     };
 
     ipSettings = {
@@ -138,23 +150,28 @@ in
         comment = "defconf";
       };
 
-      routeros_ip_service = let
-        mkSvc = name: numbers: svcCfg: {
-          inherit numbers;
-          port = svcCfg.port;
-          disabled = !svcCfg.enable;
-        } // lib.optionalAttrs (svcCfg.enable && svcCfg.allowedAddresses != null) {
-          address = svcCfg.allowedAddresses;
+      routeros_ip_service =
+        let
+          mkSvc =
+            name: numbers: svcCfg:
+            {
+              inherit numbers;
+              port = svcCfg.port;
+              disabled = !svcCfg.enable;
+            }
+            // lib.optionalAttrs (svcCfg.enable && svcCfg.allowedAddresses != null) {
+              address = svcCfg.allowedAddresses;
+            };
+        in
+        {
+          ftp = mkSvc "ftp" "ftp" cfg.services.ftp;
+          ssh = mkSvc "ssh" "ssh" cfg.services.ssh;
+          telnet = mkSvc "telnet" "telnet" cfg.services.telnet;
+          www = mkSvc "www" "www" cfg.services.www;
+          winbox = mkSvc "winbox" "winbox" cfg.services.winbox;
+          api = mkSvc "api" "api" cfg.services.api;
+          api_ssl = mkSvc "api-ssl" "api-ssl" cfg.services.api-ssl;
         };
-      in {
-        ftp = mkSvc "ftp" "ftp" cfg.services.ftp;
-        ssh = mkSvc "ssh" "ssh" cfg.services.ssh;
-        telnet = mkSvc "telnet" "telnet" cfg.services.telnet;
-        www = mkSvc "www" "www" cfg.services.www;
-        winbox = mkSvc "winbox" "winbox" cfg.services.winbox;
-        api = mkSvc "api" "api" cfg.services.api;
-        api_ssl = mkSvc "api-ssl" "api-ssl" cfg.services.api-ssl;
-      };
 
       routeros_ip_neighbor_discovery_settings.default = {
         discover_interface_list = cfg.neighborDiscovery.interfaceList;
