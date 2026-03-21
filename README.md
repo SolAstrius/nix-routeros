@@ -81,6 +81,38 @@ Create `router.nix` with your configuration:
 
 For a full production example with SOPS secrets, WiFi, LTE, custom firewall rules, and 11 managed hosts, see [aleks-sidorenko/nix-config/infra/router](https://github.com/aleks-sidorenko/nix-config/tree/master/infra/router).
 
+## Generated Scripts
+
+`mkRouterDerivation` produces a derivation with four scripts (where `name` defaults to `"router"`):
+
+| Script | Description |
+|--------|-------------|
+| `<name>-show` | Print the generated Terraform JSON to stdout |
+| `<name>-plan` | Run `tofu init` + `tofu plan` — preview changes without applying |
+| `<name>-apply` | Run `tofu init` + `tofu apply` — apply changes to the router |
+| `<name>-destroy` | Run `tofu init` + `tofu destroy` — remove all managed resources |
+
+The `plan`, `apply`, and `destroy` scripts require the `FLAKE_DIR` environment variable to be set to the flake root directory. They:
+
+1. Decrypt secrets from SOPS (if `secretsFile` and `secrets` are configured)
+2. Copy the generated `config.tf.json` into `stateDir`
+3. Run `tofu init` and the corresponding command
+
+```bash
+export FLAKE_DIR=$(pwd)
+
+# Preview what would change
+nix run .#default.plan
+
+# Apply changes to router
+nix run .#default.apply
+
+# Inspect the raw Terraform JSON
+nix run .#default | jq .
+```
+
+If you use a custom `name`, the scripts are named accordingly (e.g. `name = "myrouter"` produces `myrouter-show`, `myrouter-plan`, etc.).
+
 ## Option Reference
 
 ### `routeros.connection`
