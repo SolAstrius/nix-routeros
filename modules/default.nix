@@ -9,10 +9,16 @@ in
     ./system.nix
     ./bridge.nix
     ./interfaces.nix
+    ./vlans.nix
     ./dhcp.nix
     ./dns.nix
     ./firewall.nix
     ./wifi.nix
+    ./routes.nix
+    ./wireguard.nix
+    ./ipv6.nix
+    ./scheduler.nix
+    ./scripts.nix
   ];
 
   options.routeros = {
