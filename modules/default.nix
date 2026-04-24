@@ -19,6 +19,7 @@ in
     ./ipv6.nix
     ./scheduler.nix
     ./scripts.nix
+    ./sniffer.nix
   ];
 
   options.routeros = {
