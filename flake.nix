@@ -48,6 +48,12 @@
             stateDir ? ".",
             secretsFile ? null,
             secrets ? { },
+            # Enable OpenTofu state encryption (1.7+). When true, an
+            # encryption.tf HCL file is written alongside config.tf.json
+            # (HCL because the encryption block doesn't accept JSON). The
+            # passphrase comes from $TF_VAR_state_passphrase — wire it via
+            # the `secrets` attrset (e.g. TF_VAR_state_passphrase = "router/state_passphrase";).
+            stateEncryption ? false,
           }:
           let
             terraformConfiguration = terranix.lib.terranixConfiguration {
@@ -59,6 +65,29 @@
             tofu = "${pkgs.opentofu}/bin/tofu";
             sops = "${pkgs.sops}/bin/sops";
 
+            # The encryption block must be HCL — OpenTofu doesn't parse it
+            # in JSON syntax (https://github.com/opentofu/opentofu/issues/2174).
+            encryptionTf = pkgs.writeText "encryption.tf" ''
+              terraform {
+                encryption {
+                  key_provider "pbkdf2" "default" {
+                    passphrase = var.state_passphrase
+                  }
+                  method "aes_gcm" "default" {
+                    keys = key_provider.pbkdf2.default
+                  }
+                  state {
+                    method   = method.aes_gcm.default
+                    enforced = true
+                  }
+                  plan {
+                    method   = method.aes_gcm.default
+                    enforced = true
+                  }
+                }
+              }
+            '';
+
             resolveRoot = ''
               if [[ -z "''${FLAKE_DIR:-}" ]]; then
                 echo "Error: FLAKE_DIR not set. Export it to the flake root directory."
@@ -67,12 +96,18 @@
               REPO_ROOT="$FLAKE_DIR"
             '';
 
+            # Translate a slash-separated SOPS path ("bulgaria/api_password")
+            # into the bracketed --extract syntax ('["bulgaria"]["api_password"]').
+            sopsPath =
+              path:
+              lib.concatStrings (builtins.map (seg: "[\"${seg}\"]") (lib.splitString "/" path));
+
             loadSecrets =
               if secretsFile != null && secrets != { } then
                 lib.concatStringsSep "\n" (
                   lib.mapAttrsToList (
                     envVar: sopsKey:
-                    ''export ${envVar}=$(${sops} -d --extract '["${sopsKey}"]' "$REPO_ROOT/${secretsFile}")''
+                    ''export ${envVar}=$(${sops} -d --extract '${sopsPath sopsKey}' "$REPO_ROOT/${secretsFile}")''
                   ) secrets
                 )
               else
@@ -81,6 +116,7 @@
             tfSetup = ''
               cd "$REPO_ROOT/${stateDir}"
               cp -f ${terraformConfiguration} config.tf.json
+              ${lib.optionalString stateEncryption "cp -f ${encryptionTf} encryption.tf"}
             '';
 
             show = pkgs.writeShellScriptBin "${name}-show" ''

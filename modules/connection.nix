@@ -30,6 +30,11 @@ in
       default = "api";
       description = "API connection scheme (api for plaintext, apis for TLS).";
     };
+
+    # Note: state encryption is configured at the mkRouterDerivation level,
+    # not here — OpenTofu's `encryption {}` block doesn't accept JSON syntax
+    # (https://github.com/opentofu/opentofu/issues/2174), so it's emitted as
+    # a separate static encryption.tf file by mkRouterDerivation when asked.
   };
 
   config = {
