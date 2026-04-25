@@ -7,6 +7,14 @@
       url = "github:terranix/terranix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    # Personal fork carrying https://github.com/terraform-routeros/terraform-provider-routeros/pull/983
+    # (fix for /ip service import in RouterOS 7.20+). Pinned until the PR
+    # merges upstream and a release ships, after which this can drop back
+    # to the registry build.
+    terraform-provider-routeros-src = {
+      url = "github:SolAstrius/terraform-provider-routeros/fix/ip-service-dynamic-entries-905";
+      flake = false;
+    };
   };
 
   outputs =
@@ -14,6 +22,7 @@
       self,
       nixpkgs,
       terranix,
+      terraform-provider-routeros-src,
       ...
     }:
     let
@@ -64,6 +73,45 @@
 
             tofu = "${pkgs.opentofu}/bin/tofu";
             sops = "${pkgs.sops}/bin/sops";
+
+            # Build the terraform-routeros provider from the pinned fork. The
+            # output is laid out as a tofu-compatible filesystem mirror so
+            # `provider_installation { filesystem_mirror { ... } }` finds it.
+            providerVersion = "1.99.1-sol-905";
+            providerOsArch = pkgs.go.GOOS + "_" + pkgs.go.GOARCH;
+            providerMirror = pkgs.buildGoModule {
+              pname = "terraform-provider-routeros";
+              version = providerVersion;
+              src = terraform-provider-routeros-src;
+              vendorHash = "sha256-hnj2FejrI1x12vECOh0CsANRNsxRu2Lfm7WlfJGooGA=";
+              # Only build the provider — repo also has tools/{boilerplate,importer,schema_changes}
+              # that we don't need in the mirror.
+              subPackages = [ "." ];
+              # Acceptance tests need a real RouterOS instance.
+              doCheck = false;
+              # Reshape the standard $out/bin/terraform-provider-routeros layout
+              # into the registry mirror layout tofu expects.
+              postInstall = ''
+                mkdir -p $out/registry.opentofu.org/terraform-routeros/routeros/${providerVersion}/${providerOsArch}
+                mv $out/bin/terraform-provider-routeros \
+                  $out/registry.opentofu.org/terraform-routeros/routeros/${providerVersion}/${providerOsArch}/terraform-provider-routeros_v${providerVersion}
+                rm -rf $out/bin
+              '';
+            };
+
+            # tofu CLI config that uses the local mirror first, falls back to
+            # the public registry for everything else.
+            tfCliConfig = pkgs.writeText "terraformrc" ''
+              provider_installation {
+                filesystem_mirror {
+                  path    = "${providerMirror}"
+                  include = ["terraform-routeros/routeros"]
+                }
+                direct {
+                  exclude = ["terraform-routeros/routeros"]
+                }
+              }
+            '';
 
             # The encryption block must be HCL — OpenTofu doesn't parse it
             # in JSON syntax (https://github.com/opentofu/opentofu/issues/2174).
@@ -129,7 +177,8 @@
               ${resolveRoot}
               ${loadSecrets}
               ${tfSetup}
-              ${tofu} init -input=false
+              export TF_CLI_CONFIG_FILE=${tfCliConfig}
+              ${tofu} init -input=false -upgrade
               ${tofu} plan
             '';
 
@@ -138,7 +187,8 @@
               ${resolveRoot}
               ${loadSecrets}
               ${tfSetup}
-              ${tofu} init -input=false
+              export TF_CLI_CONFIG_FILE=${tfCliConfig}
+              ${tofu} init -input=false -upgrade
               ${tofu} apply
             '';
 
@@ -147,7 +197,8 @@
               ${resolveRoot}
               ${loadSecrets}
               ${tfSetup}
-              ${tofu} init -input=false
+              export TF_CLI_CONFIG_FILE=${tfCliConfig}
+              ${tofu} init -input=false -upgrade
               ${tofu} destroy
             '';
           in

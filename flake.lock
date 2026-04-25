@@ -40,6 +40,7 @@
     "root": {
       "inputs": {
         "nixpkgs": "nixpkgs",
+        "terraform-provider-routeros-src": "terraform-provider-routeros-src",
         "terranix": "terranix"
       }
     },
@@ -55,6 +56,23 @@
       "original": {
         "owner": "nix-systems",
         "repo": "default",
+        "type": "github"
+      }
+    },
+    "terraform-provider-routeros-src": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1777076874,
+        "narHash": "sha256-jJMZURxry7dWZqcpPlLB7REnCV5iXEpc5LRBwRtdqeM=",
+        "owner": "SolAstrius",
+        "repo": "terraform-provider-routeros",
+        "rev": "867ee6b115d807226bfd5c93f382176dfa6ac438",
+        "type": "github"
+      },
+      "original": {
+        "owner": "SolAstrius",
+        "ref": "fix/ip-service-dynamic-entries-905",
+        "repo": "terraform-provider-routeros",
         "type": "github"
       }
     },
