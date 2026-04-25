@@ -35,6 +35,18 @@ in
       default = null;
       description = "Manual admin MAC address for the bridge. If null, auto-mac is used.";
     };
+
+    portDefaults = lib.mkOption {
+      type = lib.types.attrsOf lib.types.anything;
+      default = { };
+      description = ''
+        Default attributes applied to every bridge port. The module deliberately
+        leaves bridge-port fields unset by default (so RouterOS-side customizations
+        like ingress_filtering=true survive an apply). Set this to e.g.
+        `{ ingress_filtering = false; internal_path_cost = 10; path_cost = 10; }`
+        if you want the upstream "defconf" RouterOS factory layout.
+      '';
+    };
   };
 
   config = lib.mkIf cfg.enable {
@@ -55,11 +67,8 @@ in
           value = {
             bridge = cfg.name;
             interface = iface;
-            comment = "defconf";
-            ingress_filtering = false;
-            internal_path_cost = 10;
-            path_cost = 10;
-          };
+          }
+          // cfg.portDefaults;
         }) cfg.ports
       );
     };
