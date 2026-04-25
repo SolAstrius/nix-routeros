@@ -108,7 +108,7 @@ in
       # List members: bridge->LAN, WAN interfaces->WAN, LTE->WAN (if enabled)
       routeros_interface_list_member = {
         bridge_LAN = {
-          interface = "bridge";
+          interface = config.routeros.bridge.name;
           list = "LAN";
           comment = "defconf";
         };

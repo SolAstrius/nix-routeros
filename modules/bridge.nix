@@ -1,10 +1,22 @@
 { config, lib, ... }:
 let
   cfg = config.routeros.bridge;
+  # Sanitize the bridge name for use as a Terraform resource id (kebab → snake).
+  bridgeRsc = config.routeros._lib.sanitizeName cfg.name;
 in
 {
   options.routeros.bridge = {
     enable = lib.mkEnableOption "bridge interface";
+
+    name = lib.mkOption {
+      type = lib.types.str;
+      default = "bridge";
+      description = ''
+        Name of the bridge interface as RouterOS sees it. Defaults to "bridge"
+        which matches the RouterOS factory defconf. Other modules (interface
+        lists, mac-server, etc.) reference this name when wiring up the LAN.
+      '';
+    };
 
     ports = lib.mkOption {
       type = lib.types.listOf lib.types.str;
@@ -27,8 +39,8 @@ in
 
   config = lib.mkIf cfg.enable {
     resource = {
-      routeros_interface_bridge.bridge = {
-        name = "bridge";
+      routeros_interface_bridge.${bridgeRsc} = {
+        name = cfg.name;
         auto_mac = cfg.adminMac == null;
         comment = "defconf";
         port_cost_mode = "short";
@@ -41,7 +53,7 @@ in
         builtins.map (iface: {
           name = iface;
           value = {
-            bridge = "bridge";
+            bridge = cfg.name;
             interface = iface;
             comment = "defconf";
             ingress_filtering = false;
