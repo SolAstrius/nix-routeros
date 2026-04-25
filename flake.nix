@@ -7,12 +7,17 @@
       url = "github:terranix/terranix";
       inputs.nixpkgs.follows = "nixpkgs";
     };
-    # Personal fork carrying https://github.com/terraform-routeros/terraform-provider-routeros/pull/983
-    # (fix for /ip service import in RouterOS 7.20+). Pinned until the PR
-    # merges upstream and a release ships, after which this can drop back
-    # to the registry build.
+    # Personal fork carrying upstream-pending fixes:
+    #   - https://github.com/terraform-routeros/terraform-provider-routeros/pull/983
+    #     /ip service import in RouterOS 7.20+ (issue #905)
+    #   - https://github.com/terraform-routeros/terraform-provider-routeros/pull/984
+    #     /ip address vrf read-only on 7.21+ (issue #944)
+    #   - https://github.com/terraform-routeros/terraform-provider-routeros/pull/985
+    #     /ip & /ipv6 dhcp-server preserve required fields when unset
+    # All three are stacked on the `sol/all-fixes` branch. Drop back to the
+    # registry build once they land upstream and a release ships.
     terraform-provider-routeros-src = {
-      url = "github:SolAstrius/terraform-provider-routeros/fix/ip-service-dynamic-entries-905";
+      url = "github:SolAstrius/terraform-provider-routeros/sol/all-fixes";
       flake = false;
     };
   };
@@ -77,7 +82,7 @@
             # Build the terraform-routeros provider from the pinned fork. The
             # output is laid out as a tofu-compatible filesystem mirror so
             # `provider_installation { filesystem_mirror { ... } }` finds it.
-            providerVersion = "1.99.1-sol-905";
+            providerVersion = "1.99.1-sol-allfixes";
             providerOsArch = pkgs.go.GOOS + "_" + pkgs.go.GOARCH;
             providerMirror = pkgs.buildGoModule {
               pname = "terraform-provider-routeros";

@@ -62,16 +62,16 @@
     "terraform-provider-routeros-src": {
       "flake": false,
       "locked": {
-        "lastModified": 1777076874,
-        "narHash": "sha256-jJMZURxry7dWZqcpPlLB7REnCV5iXEpc5LRBwRtdqeM=",
+        "lastModified": 1777080109,
+        "narHash": "sha256-VcyoqLWIVJIExXFXhuglkXFRdQUMqNtjQHOVjvs/7vQ=",
         "owner": "SolAstrius",
         "repo": "terraform-provider-routeros",
-        "rev": "867ee6b115d807226bfd5c93f382176dfa6ac438",
+        "rev": "b3aa31887f35d0315f1ee89257f65b83a3c15eba",
         "type": "github"
       },
       "original": {
         "owner": "SolAstrius",
-        "ref": "fix/ip-service-dynamic-entries-905",
+        "ref": "sol/all-fixes",
         "repo": "terraform-provider-routeros",
         "type": "github"
       }
