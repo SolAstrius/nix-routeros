@@ -20,6 +20,7 @@ in
     ./scheduler.nix
     ./scripts.nix
     ./sniffer.nix
+    ./upnp.nix
   ];
 
   options.routeros = {
